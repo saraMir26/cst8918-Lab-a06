@@ -1,16 +1,16 @@
 package test
 
 import (
-	"testing"
+    "testing"
 
-	"github.com/gruntwork-io/terratest/modules/azure"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/stretchr/testify/assert"
+    "github.com/gruntwork-io/terratest/modules/azure"
+    "github.com/gruntwork-io/terratest/modules/terraform"
+    "github.com/stretchr/testify/assert"
 )
 
 // You normally want to run this under a separate "Testing" subscription
 // For lab purposes you will use your assigned subscription under the Cloud Dev/Ops program tenant
-var subscriptionID string = "<your-azure-subscription-id"
+var subscriptionID string = "1300807e-e401-4b7e-aad8-3704f3170d21"
 
 func TestAzureLinuxVMCreation(t *testing.T) {
 	terraformOptions := &terraform.Options{
@@ -18,7 +18,7 @@ func TestAzureLinuxVMCreation(t *testing.T) {
 		TerraformDir: "../",
 		// Override the default terraform variables
 		Vars: map[string]interface{}{
-			"labelPrefix": "<your-college-id>",
+			"labelPrefix": "mirz0014",
 		},
 	}
 
@@ -33,4 +33,13 @@ func TestAzureLinuxVMCreation(t *testing.T) {
 
 	// Confirm VM exists
 	assert.True(t, azure.VirtualMachineExists(t, vmName, resourceGroupName, subscriptionID))
+
+	// Confirm NIC exists and is connected to VM
+	nicNames := azure.GetVirtualMachineNics(t, vmName, resourceGroupName, subscriptionID)
+	assert.NotEmpty(t, nicNames)
+
+	// Confirm the VM is running the correct Ubuntu version
+	vmImage := azure.GetVirtualMachineImage(t, vmName, resourceGroupName, subscriptionID)
+	assert.Equal(t, "Canonical", vmImage.Publisher)
+	assert.Contains(t, vmImage.Offer, "ubuntu")
 }
